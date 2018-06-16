@@ -166,16 +166,14 @@ public class Pessoa implements Serializable{
 	private List<Fone> fones = new ArrayList<Fone>();
 	
 	public List<Fone> getFones(){
-		return fones;
+		return fones; 
 	}
 	public void setFones(List<Fone> fones) {
 		this.fones = fones;
 	}
 	
 }
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+#################################################
 
 
 package negocio;
@@ -195,7 +193,7 @@ import persistencia.PessoaDAO;
 public class PessoaCtrl implements Serializable{
 	
 	private static final long serialVersionUID = 1L;
-
+	private String filtro = "";
 	private Pessoa pessoa;
 
 	public Pessoa getPessoa() {
@@ -210,7 +208,7 @@ public class PessoaCtrl implements Serializable{
 	}
 	
 	public List<Pessoa> getListagem() {
-		return PessoaDAO.listagem("");
+		return PessoaDAO.listagem(filtro);
 	}
 	
 	public String actionGravar(){
@@ -229,6 +227,7 @@ public class PessoaCtrl implements Serializable{
 	
 	public String actionExcluir(Pessoa p){
 		PessoaDAO.excluir(p);
+		this.pessoa = new Pessoa();
 		return "index";
 	}
 	
@@ -250,9 +249,7 @@ public class PessoaCtrl implements Serializable{
 	}
 
 }
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+#########################################################
 
 package persistencia;
 
@@ -317,38 +314,128 @@ public class PessoaDAO implements Serializable{
 	}
 
 }
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+##########################################
 
 
-?xml version="1.0" encoding="UTF-8"?>
+
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE hibernate-configuration PUBLIC
-        "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
-        "http://hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+	"-//Hibernate Configuration DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+
 <hibernate-configuration>
 	<session-factory>
-		<!-- Configuração da conexão com o banco de dados Postgres e dialeto -->
+		<!-- COnfiguração da conexão com o banco POstegreSQL e dialeto -->
 		<property name="hibernate.dialect">org.hibernate.dialect.PostgreSQLDialect</property>
-		<property name="hibernate.connection.driver_class">org.postgresql.Driver</property>
-		<property name="hibernate.connection.username">postgres</property>
-		<property name="hibernate.connection.password">fujibaixo17</property>
-		<property name="hibernate.connection.url">jdbc:postgresql://localhost:5432/Bdlojavirtual</property>
-
+		<property name="connection.datasource">java:comp/env/jdbc/BDLojaVirtual</property>		
+				
+				
 		<!-- Usando as configurações do C3PO para pool de conexões -->
 		<property name="c3po.min_size">5</property>
 		<property name="c3po.max_size">20</property>
 		<property name="c3po.timeout">300</property>
 		<property name="c3po.max_statements">50</property>
 		<property name="c3po.idle_test_period">3000</property>
-
+		
 		<!-- Configurações de debug -->
 		<property name="show_sql">true</property>
 		<property name="format_sql">true</property>
 		<property name="generate_statistics">true</property>
 		<property name="use_sql_comments">true</property>
-
+		
 		<!-- Mapeamento das Classes -->
-		<mapping class="beans.Produto" />
-		<mapping class="beans.Pessoa" />
-		<mapping class="beans.Fone" />
+		<mapping class="beans.Produto"/>
+		<mapping class="beans.Pessoa"/>
+		<mapping class="beans.Fone"/>
+		<mapping class="beans.FormaPgto"/>
+		
 	</session-factory>
-</hibernate-conf
+</hibernate-configuration><?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-configuration PUBLIC
+	"-//Hibernate Configuration DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+
+<hibernate-configuration>
+	<session-factory>
+		<!-- COnfiguração da conexão com o banco POstegreSQL e dialeto -->
+		<property name="hibernate.dialect">org.hibernate.dialect.PostgreSQLDialect</property>
+		<property name="connection.datasource">java:comp/env/jdbc/BDLojaVirtual</property>		
+				
+				
+		<!-- Usando as configurações do C3PO para pool de conexões -->
+		<property name="c3po.min_size">5</property>
+		<property name="c3po.max_size">20</property>
+		<property name="c3po.timeout">300</property>
+		<property name="c3po.max_statements">50</property>
+		<property name="c3po.idle_test_period">3000</property>
+		
+		<!-- Configurações de debug -->
+		<property name="show_sql">true</property>
+		<property name="format_sql">true</property>
+		<property name="generate_statistics">true</property>
+		<property name="use_sql_comments">true</property>
+		
+		<!-- Mapeamento das Classes -->
+		<mapping class="beans.Produto"/>
+		<mapping class="beans.Pessoa"/>
+		<mapping class="beans.Fone"/>
+		<mapping class="beans.FormaPgto"/>
+		
+	</session-factory>
+</hibernate-configuration>
+###################################################################################
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<ui:decorate xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p= "http://primefaces.org/ui"
+	template="/template/tempcliente.xhtml">
+	
+	
+	<h1>Por favor fazer logim para comfimar compra</h1>
+		<h1>LOGIN</h1>
+	
+	<h:body>
+    <div align="center">
+
+		<h:panelGroup rendered="#{!empty param.login_error}">
+		Erro ao efetuar o login.<br />
+		Motivo: e-mail ou Password incorreto
+		
+		<!--   #{SPRING_SECURITY_EXCEPTION.message}-->
+
+
+		</h:panelGroup>
+
+		<form id="login" method="post"
+			action="#{request.contextPath}/j_spring_security_check"
+			align="center">
+			<table>
+				<tr>
+					<td>Login</td>
+					<td><input type='text' name='j_username' /></td>
+				</tr>
+				<tr>
+					<td>Senha</td>
+					<td><input type='password' name='j_password' /></td>
+				</tr>
+				<tr>
+					<td align="right"><input type="checkbox"
+						name="_spring_security_remember_me" /></td>
+					<td>Logar automaticamente</td>
+				</tr>
+				<tr>
+					<td></td>
+					<td><input type="submit" value="Logar" /></td>
+				</tr>
+			</table>
+			<script>
+				document.getElementById("login").j_username.value = "#{SPRING_SECURITY_LAST_USERNAME}";
+			</script>
+		</form>
+	</div>
+  </h:body>
+</ui:decorate>
+
