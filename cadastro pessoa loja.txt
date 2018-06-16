@@ -1,0 +1,354 @@
+package beans;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import javax.persistence.*;
+
+@Entity
+@Table(name = "pessoa")
+public class Pessoa implements Serializable{
+
+	private static final long serialVersionUID = -8023482526632579452L;
+	
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "pes_id")
+	private int id;
+	
+	@Column(name = "pes_nome")
+	private String nome;
+	
+	@Column(name = "pes_cpf")
+	private int cpf;
+	
+	@Column(name = "pes_data_nasc")
+	private Date data;
+	
+	@Column(name = "pes_rua")
+	private String rua;
+	
+	@Column(name = "pes_rg")
+	private String rg;
+
+	@Column(name = "pes_bairro")
+	private String bairro;
+	
+	@Column(name = "pes_cidade")
+	private String cidade;
+	
+	@Column(name = "pes_uf")
+	private String uf;
+	
+	@Column(name = "pes_cep")
+	private int cep;
+	
+	@Column(name = "pes_email")
+	private String email;
+	
+	@Column(name = "pes_senha")
+	private String senha;
+	
+	@Column(name = "pes_tipo")
+	private String tipo;
+
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+	public String getNome() {
+		return nome;
+	} 
+
+	public void setNome(String nome) {
+		this.nome = nome;
+	}
+
+	public int getCpf() {
+		return cpf;
+	}
+
+	public void setCpf(int cpf) {
+		this.cpf = cpf;
+	}
+	
+	public String getRg() {
+		return rg;
+	}
+
+	public void setRg(String rg) {
+		this.rg = rg;
+	}
+
+	public Date getData() {
+		return data;
+	}
+
+	public void setData(Date data) {
+		this.data = data;
+	}
+
+	public String getRua() {
+		return rua;
+	}
+
+	public void setRua(String rua) {
+		this.rua = rua;
+	}
+	
+	
+
+
+	public String getBairro() {
+		return bairro;
+	}
+
+	public void setBairro(String bairro) {
+		this.bairro = bairro;
+	}
+
+	public String getCidade() {
+		return cidade;
+	}
+
+	public void setCidade(String cidade) {
+		this.cidade = cidade;
+	}
+
+	public String getUf() {
+		return uf;
+	}
+
+	public void setUf(String uf) {
+		this.uf = uf;
+	}
+
+	public int getCep() {
+		return cep;
+	}
+
+	public void setCep(int cep) {
+		this.cep = cep;
+	}
+
+	public String getEmail() {
+		return email;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
+	}
+
+	public String getSenha() {
+		return senha;
+	}
+
+	public void setSenha(String senha) {
+		this.senha = senha;
+	}
+
+	public String getTipo() {
+		return tipo;
+	}
+
+	public void setTipo(String tipo) {
+		this.tipo = tipo;
+	}
+	
+	// Relacionamento de 1 para vários
+	@OneToMany(mappedBy = "pessoa", cascade = CascadeType.ALL)
+	private List<Fone> fones = new ArrayList<Fone>();
+	
+	public List<Fone> getFones(){
+		return fones;
+	}
+	public void setFones(List<Fone> fones) {
+		this.fones = fones;
+	}
+	
+}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+package negocio;
+
+import java.io.Serializable;
+import java.util.List;
+
+import javax.faces.bean.ManagedBean;
+import javax.faces.bean.SessionScoped;
+
+import beans.Fone;
+import beans.Pessoa;
+import persistencia.PessoaDAO;
+
+@ManagedBean
+@SessionScoped
+public class PessoaCtrl implements Serializable{
+	
+	private static final long serialVersionUID = 1L;
+
+	private Pessoa pessoa;
+
+	public Pessoa getPessoa() {
+		if(pessoa == null) {
+			pessoa = new Pessoa();
+		}
+		return pessoa;
+	}
+
+	public void setPessoa(Pessoa pessoa) {
+		this.pessoa = pessoa;
+	}
+	
+	public List<Pessoa> getListagem() {
+		return PessoaDAO.listagem("");
+	}
+	
+	public String actionGravar(){
+		if(pessoa.getId() == 0) {
+			PessoaDAO.inserir(pessoa);
+			return actionInserir();
+		} else {
+			PessoaDAO.alterar(pessoa);
+			return "index";
+		}
+	}
+	public String actionInserir() {
+		pessoa = new Pessoa();
+		return "index";
+	}
+	
+	public String actionExcluir(Pessoa p){
+		PessoaDAO.excluir(p);
+		return "index";
+	}
+	
+	public String actionAlterar(Pessoa p){
+		this.pessoa = p;
+		return "index";
+	}
+	
+	public String actionInserirFone() {
+		Fone fone = new Fone();
+		fone.setPessoa(pessoa);
+		pessoa.getFones().add(fone);
+		return "index";
+	}
+	
+	public String actionExcluirFone(Fone f) {
+		PessoaDAO.excluir(f);
+		return "form_pessoa";
+	}
+
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+package persistencia;
+
+import java.io.Serializable;
+import java.util.List;
+
+import org.hibernate.Query;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
+
+import beans.*;
+
+public class PessoaDAO implements Serializable{
+	
+	private static final long serialVersionUID = 1L;
+
+	public static void inserir(Pessoa pessoa) {
+		Session sessao = HibernateUtil.getSessionfactory().openSession();
+		Transaction t = sessao.beginTransaction();
+		sessao.save(pessoa);
+		t.commit();
+		sessao.close();
+	}
+
+	public static void alterar(Pessoa pessoa) {
+		Session sessao = HibernateUtil.getSessionfactory().openSession();
+		Transaction t = sessao.beginTransaction();
+		sessao.update(pessoa);
+		t.commit();
+		sessao.close();
+	}
+	
+	public static void excluir(Pessoa pessoa) {
+		Session sessao = HibernateUtil.getSessionfactory().openSession();
+		Transaction t = sessao.beginTransaction();
+		sessao.delete(pessoa);
+		t.commit();
+		sessao.close();
+	}
+	
+	public static List<Pessoa> listagem(String filtro) {
+		Session sessao = HibernateUtil.getSessionfactory().openSession();
+		Query consulta;
+		if(filtro.trim().length() == 0){
+			consulta = sessao.createQuery("from Pessoa order by pes_nome");
+		} else {
+			consulta = sessao.createQuery("from Produto "
+					+ "where pes_nome like :parametro order by pes_nome");
+			consulta.setString("parametro", "%" + filtro + "%");
+		}
+		List<Pessoa> lista = consulta.list();
+		sessao.close();
+		return lista;
+	}
+	
+	public static void excluir(Fone fones) {
+		Session sessao = HibernateUtil.getSessionfactory().openSession();
+		Transaction t = sessao.beginTransaction();
+		sessao.delete(fones);
+		t.commit();
+		sessao.close();
+	}
+
+}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-configuration PUBLIC
+        "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+        "http://hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+<hibernate-configuration>
+	<session-factory>
+		<!-- Configuração da conexão com o banco de dados Postgres e dialeto -->
+		<property name="hibernate.dialect">org.hibernate.dialect.PostgreSQLDialect</property>
+		<property name="hibernate.connection.driver_class">org.postgresql.Driver</property>
+		<property name="hibernate.connection.username">postgres</property>
+		<property name="hibernate.connection.password">fujibaixo17</property>
+		<property name="hibernate.connection.url">jdbc:postgresql://localhost:5432/Bdlojavirtual</property>
+
+		<!-- Usando as configurações do C3PO para pool de conexões -->
+		<property name="c3po.min_size">5</property>
+		<property name="c3po.max_size">20</property>
+		<property name="c3po.timeout">300</property>
+		<property name="c3po.max_statements">50</property>
+		<property name="c3po.idle_test_period">3000</property>
+
+		<!-- Configurações de debug -->
+		<property name="show_sql">true</property>
+		<property name="format_sql">true</property>
+		<property name="generate_statistics">true</property>
+		<property name="use_sql_comments">true</property>
+
+		<!-- Mapeamento das Classes -->
+		<mapping class="beans.Produto" />
+		<mapping class="beans.Pessoa" />
+		<mapping class="beans.Fone" />
+	</session-factory>
+</hibernate-conf
